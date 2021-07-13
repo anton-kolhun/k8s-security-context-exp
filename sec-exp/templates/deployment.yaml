@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sec-exp.fullname" . }}
+  labels:
+    {{- include "sec-exp.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "sec-exp.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "sec-exp.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "sec-exp.serviceAccountName" . }}
+      securityContext:
+        fsGroup: 1000 # changes the group permisssions of the mounted volumes
+        fsGroupChangePolicy: "OnRootMismatch" 
+      volumes:
+      - name: test-volume
+        configMap:
+          name: test-configmap
+          #defaultMode: 044
+      containers:
+        - name: {{ .Chart.Name }}
+          image: k8s-sec:1
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false   # cannot hamper any host data
+            capabilities:
+              drop:
+                - ALL   #drop all linux  capabilities
+            readOnlyRootFilesystem: true # 'runAsUser' is not able to modify any data except for  volumes  defined in Dockerfile: see DockerFile.volume:run_as_user_can_write_here
+            runAsNonRoot: true
+            runAsUser: 1000
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          volumeMounts:
+            - name: test-volume
+              mountPath: /app/test-volume/
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
