@@ -33,6 +33,8 @@ spec:
         configMap:
           name: test-configmap
           #defaultMode: 044
+      - name: writable_external
+        emptyDir: {}
       containers:
         - name: {{ .Chart.Name }}
           image: k8s-sec:1
@@ -42,7 +44,7 @@ spec:
             capabilities:
               drop:
                 - ALL   #drop all linux  capabilities
-            readOnlyRootFilesystem: true # 'runAsUser' is not able to modify any data except for  volumes  defined in Dockerfile: see DockerFile.volume:run_as_user_can_write_here
+            readOnlyRootFilesystem: true # 'runAsUser' is not able to modify any data except for external (writable_external) and volumes  defined in Dockerfile: see DockerFile.volume:run_as_user_can_write_here
             runAsNonRoot: true
             runAsUser: 1000
           imagePullPolicy: {{ .Values.image.pullPolicy }}
@@ -53,6 +55,8 @@ spec:
           volumeMounts:
             - name: test-volume
               mountPath: /app/test-volume/
+            - name: writable_external
+              mountPath: /app/writable/
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
