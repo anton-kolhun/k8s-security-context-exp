@@ -32,8 +32,8 @@ spec:
       - name: test-volume
         configMap:
           name: test-configmap
-          #defaultMode: 044
-      - name: writable_external
+          defaultMode: 0777
+      - name: writable-external
         emptyDir: {}
       containers:
         - name: {{ .Chart.Name }}
@@ -55,7 +55,7 @@ spec:
           volumeMounts:
             - name: test-volume
               mountPath: /app/test-volume/
-            - name: writable_external
+            - name: writable-external
               mountPath: /app/writable/
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
