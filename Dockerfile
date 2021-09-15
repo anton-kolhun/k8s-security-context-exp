@@ -9,7 +9,10 @@ ARG UID=1000
 ARG GID=1000
 RUN groupadd -g $GID -o $UNAME
 RUN useradd -m -u $UID -g $GID -o -s /bin/bash $UNAME
+#RUN echo "$UID:x:$UID:$UID:An Identity for eric-sec-certm:/nonexistent:/bin/false" >> /etc/passwd \
+# && echo "$UID:!::0:::::" >> /etc/shadow
 COPY app.jar app.jar
 RUN sh -c 'touch app.jar'
 USER $UNAME
+#USER $UID
 ENTRYPOINT ["/bin/sh", "-c", "sleep 1000 && java -Djava.security.egd=file:/dev/./urandom -jar app.jar"]
