@@ -1,4 +1,4 @@
-# Usage of  prometheus helm chart
+# Usage of  prometheus helm chart.
 
 
 ## Building docker image 
